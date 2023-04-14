@@ -3,8 +3,9 @@ import Start from './components/Start';
 import Chat from './components/Chat';
 
 // import react Navigation
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import React from 'react';
 
 // Create the navigator
 const Stack = createNativeStackNavigator();
@@ -26,6 +27,6 @@ const App = () => {
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+};
 
 export default App;

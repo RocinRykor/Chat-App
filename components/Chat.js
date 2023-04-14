@@ -1,27 +1,24 @@
-import React, {Component} from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import React, {useEffect} from 'react';
+import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 
-export default class Chat extends Component {
-  componentDidMount() {
-    const name = this.props.route.params.name;
-    this.props.navigation.setOptions({title: name});
-  }
+const Chat = ({route, navigation}) => {
+  useEffect(() => {
+    const name = route.params.name;
+    navigation.setOptions({title: name});
+  }, []);
 
-  render() {
-    const name = this.props.route.params.name;
-    const backgroundColor = this.props.route.params.color;
-    return (
-        <View style={[styles.chatContainer, {backgroundColor}]}>
-          <Text style={styles.text}>Welcome, {name}!</Text>
-          <TouchableOpacity
-              onPress={() => this.props.navigation.navigate('Start')}
-          >
-            <Text style={styles.text}>Go to Start</Text>
-          </TouchableOpacity>
-        </View>
-    );
-  }
-}
+  const name = route.params.name;
+  const backgroundColor = route.params.color;
+
+  return (
+    <View style={[styles.chatContainer, {backgroundColor}]}>
+      <Text style={styles.text}>Welcome, {name}!</Text>
+      <TouchableOpacity onPress={() => navigation.navigate('Start')}>
+        <Text style={styles.text}>Go to Start</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   chatContainer: {
@@ -35,3 +32,5 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
 });
+
+export default Chat;
