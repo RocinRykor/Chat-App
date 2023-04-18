@@ -2,13 +2,15 @@ import {useEffect, useState} from 'react';
 import {KeyboardAvoidingView, Platform, StyleSheet, View} from 'react-native';
 import {Bubble, GiftedChat} from 'react-native-gifted-chat';
 import {positiveMessages} from '../positiveMessages';
+import {useNavigation, useRoute} from '@react-navigation/native';
 
-const Chat = ({route, navigation}) => {
+const Chat = ({db}) => {
   const [messages, setMessages] = useState([]);
+  const route = useRoute();
+  const navigation = useNavigation();
 
   // save the name and color from the previous screen
-  const name = route.params.name;
-  const color = route.params.color;
+  const { name, color } = route.params;
 
   useEffect(() => {
     //Set the header to use name and color from previous screen, text is set to white to be visible no mater what background color is chosen
