@@ -1,8 +1,17 @@
 import {useEffect, useState} from 'react';
 import {KeyboardAvoidingView, Platform, StyleSheet, View} from 'react-native';
 import {Bubble, GiftedChat} from 'react-native-gifted-chat';
-import {positiveMessages} from '../positiveMessages';
 import {useNavigation, useRoute} from '@react-navigation/native';
+
+// import firebase functions
+import {
+  addDoc,
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+} from 'firebase/firestore';
+
 
 const Chat = ({db}) => {
   const [messages, setMessages] = useState([]);
@@ -10,44 +19,39 @@ const Chat = ({db}) => {
   const navigation = useNavigation();
 
   // save the name and color from the previous screen
-  const { name, color } = route.params;
+  const {name, color} = route.params;
 
   useEffect(() => {
     //Set the header to use name and color from previous screen, text is set to white to be visible no mater what background color is chosen
     navigation.setOptions({
       title: name,
       headerStyle: {
-        backgroundColor: color
+        backgroundColor: color,
       },
-      headerTintColor: '#fff'
+      headerTintColor: '#fff',
     });
 
-    /* Create static messages to display when first opening
-    * The system message will pull from a list of positive messages and use one at random */
-    setMessages([
-      {
-        _id: 1,
-        text: 'Welcome to chat, ' + name,
-        createdAt: new Date(),
-        user: {
-          _id: 2,
-          name: 'Chat App!',
-          avatar: 'https://picsum.photos/id/237/140/140',
-        },
-      },
-      {
-        _id: 2,
-        text: `Entering chat, remember, ${positiveMessages[Math.floor(Math.random() * positiveMessages.length)]}`,
-        createdAt: new Date(),
-        system: true,
-      },
-    ]);
+    const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+    const unsubMessages = onSnapshot(q, (documentsSnapshot) => {
+      let newMessages = [];
+      documentsSnapshot.forEach((doc) => {
+        newMessages.push({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: new Date(doc.data().createdAt.toMillis()),
+        });
+      });
+      setMessages(newMessages);
+    });
 
+    // code to execute when the component will be unmounted
+    return () => {
+      if (unsubMessages) unsubMessages();
+    };
   }, []);
 
   const onSend = (newMessages) => {
-    setMessages(
-      previousMessages => GiftedChat.append(previousMessages, newMessages));
+    addDoc(collection(db, 'messages'), newMessages[0]);
   };
 
   // Render the chat bubbles, the users color is matched to the selected color
@@ -71,10 +75,7 @@ const Chat = ({db}) => {
         messages={messages}
         renderBubble={renderBubble}
         onSend={messages => onSend(messages)}
-        user={{
-          _id: 1,
-          name,
-        }}
+        user={{ _id: route.params.userID, username: route.params.name }}
       />
       {Platform.OS === 'android'
         ? <KeyboardAvoidingView behavior="height"/>
