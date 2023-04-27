@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 
 
-const Chat = ({db}) => {
+const Chat = ({db,  isConnected }) => {
   const [messages, setMessages] = useState([]);
   const route = useRoute();
   const navigation = useNavigation();
