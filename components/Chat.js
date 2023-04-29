@@ -7,8 +7,6 @@ import {
   SystemMessage,
 } from 'react-native-gifted-chat';
 import {useNavigation, useRoute} from '@react-navigation/native';
-
-// import firebase functions
 import {
   addDoc,
   collection,
@@ -16,22 +14,17 @@ import {
   orderBy,
   query,
 } from 'firebase/firestore';
-
-
-// Importing storage for native apps
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Chat = ({db, isConnected}) => {
   const [messages, setMessages] = useState([]);
   const route = useRoute();
   const navigation = useNavigation();
-
-  // save the name and color from the previous screen
   const {name, color, userID} = route.params;
   let unsubMessages;
 
   useEffect(() => {
-    //Set the header to use name and color from previous screen, text is set to white to be visible no mater what background color is chosen
+    // Set the header to use name and color from previous screen, text is set to white to be visible no matter what background color is chosen
     navigation.setOptions({
       title: name,
       headerStyle: {
@@ -40,63 +33,62 @@ const Chat = ({db, isConnected}) => {
       headerTintColor: '#fff',
     });
 
+    // Only fetch new messages if connected to the database
     if (isConnected === true) {
-      // unregister current onSnapshot() listener to avoid registering multiple listeners when
-      // useEffect code is re-executed.
-      if (unsubMessages) unsubMessages();
-      unsubMessages = null;
+      // Unregister current onSnapshot() listener to avoid registering multiple listeners when useEffect code is re-executed.
+      if (unsubMessages) {
+        unsubMessages();
+      }
 
+      // Query the messages collection and order them by createdAt field in descending order
       const q = query(collection(db, 'messages'), orderBy('createdAt', 'desc'));
+
+      // Attach an onSnapshot listener to get real-time updates on the collection
       unsubMessages = onSnapshot(q, (documentsSnapshot) => {
-        let newMessages = [];
-        documentsSnapshot.forEach((doc) => {
-          newMessages.push({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: new Date(doc.data().createdAt.toMillis()),
-          });
-        });
+        const newMessages = documentsSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          createdAt: new Date(doc.data().createdAt.toMillis()),
+        }));
         cacheMessages(newMessages);
         setMessages(newMessages);
       });
     } else {
+      // Load cached messages if not connected to the database
       loadCachedMessages();
     }
 
-    // code to execute when the component will be unmounted
+    // Clean up function to unregister the onSnapshot listener
     return () => {
-      if (unsubMessages) unsubMessages();
+      if (unsubMessages) {
+        unsubMessages();
+      }
     };
-  }, [isConnected]);
+  }, [db, isConnected, name, color, navigation]);
 
-
- // async function that sets messages with cached value
-  // || [] will assign an empty array to cachedMessages if the messages_stored item hasn’t been set yet in AsyncStorage
+  // Async function that sets messages with cached value
   const loadCachedMessages = async () => {
-    const cachedMessages =
-      (await AsyncStorage.getItem('messages')) || [];
+    const cachedMessages = (await AsyncStorage.getItem('messages')) || '[]';
     setMessages(JSON.parse(cachedMessages));
   };
 
-  // cashing data whenever it is updated
+  // Async function that caches messages whenever it is updated
   const cacheMessages = async (messages) => {
     try {
-      await AsyncStorage.setItem(
-        'messages',
-        JSON.stringify(messages)
-      );
+      await AsyncStorage.setItem('messages', JSON.stringify(messages));
     } catch (error) {
       console.log(error.message);
     }
   };
 
+  // Function to handle sending new messages to the database
   const onSend = (newMessages) => {
     addDoc(collection(db, 'messages'), newMessages[0]);
   };
 
-  // Render the chat bubbles, the users color is matched to the selected color
-  const renderBubble = (props) => {
-    return <Bubble
+  // Render the chat bubbles, the user's color is matched to the selected color
+  const renderBubble = (props) => (
+    <Bubble
       {...props}
       wrapperStyle={{
         right: {
@@ -106,26 +98,20 @@ const Chat = ({db, isConnected}) => {
           backgroundColor: '#FFF',
         },
       }}
-    />;
-  };
+    />
+  );
+
 
   // Disable the input toolbar if not connected
-  const renderInputToolbar = (props) => {
-    if (isConnected) {
-      return <InputToolbar {...props} />;
-    } else {
-      return null;
-    }
-  };
+  const renderInputToolbar = (props) =>
+    isConnected ? <InputToolbar {...props} /> : null;
 
-  const renderSystemMessage = (props) => {
-    return (
-      <SystemMessage
-        {...props}
-        textStyle={{fontSize: 14, color: '#fff', fontWeight: 'bold'}}
-      />
-    );
-  };
+  const renderSystemMessage = (props) => (
+    <SystemMessage
+      {...props}
+      textStyle={{fontSize: 14, color: '#fff', fontWeight: 'bold'}}
+    />
+  );
 
   return (
     <View style={styles.container}>
@@ -134,7 +120,7 @@ const Chat = ({db, isConnected}) => {
         renderBubble={renderBubble}
         renderInputToolbar={renderInputToolbar}
         renderSystemMessage={renderSystemMessage}
-        onSend={messages => onSend(messages)}
+        onSend={onSend}
         user={{_id: userID, username: name}}
       />
       {Platform.OS === 'android'
