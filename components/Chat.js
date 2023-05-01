@@ -1,5 +1,11 @@
 import {useEffect, useState} from 'react';
-import {KeyboardAvoidingView, Platform, StyleSheet, View} from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  View,
+} from 'react-native';
 import {
   Bubble,
   GiftedChat,
@@ -10,20 +16,32 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import {
   addDoc,
   collection,
+  disableNetwork,
+  enableNetwork,
   onSnapshot,
   orderBy,
   query,
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNetInfo} from '@react-native-community/netinfo';
 
-const Chat = ({db, isConnected}) => {
+const Chat = ({db}) => {
   const [messages, setMessages] = useState([]);
   const route = useRoute();
   const navigation = useNavigation();
   const {name, color, userID} = route.params;
   let unsubMessages;
+  const connectionStatus = useNetInfo();
 
   useEffect(() => {
+    // Check for a connection
+    if (connectionStatus.isConnected === false) {
+      Alert.alert('Connection Lost!');
+      disableNetwork(db);
+    } else if (connectionStatus.isConnected === true) {
+      enableNetwork(db);
+    }
+
     // Set the header to use name and color from previous screen, text is set to white to be visible no matter what background color is chosen
     navigation.setOptions({
       title: name,
@@ -64,7 +82,7 @@ const Chat = ({db, isConnected}) => {
         unsubMessages();
       }
     };
-  }, [db, isConnected, name, color, navigation]);
+  }, [db, connectionStatus.isConnected, name, color, navigation]);
 
   // Async function that sets messages with cached value
   const loadCachedMessages = async () => {
