@@ -24,6 +24,7 @@ import {
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNetInfo} from '@react-native-community/netinfo';
+import CustomActions from './CustomActions';
 
 const Chat = ({db}) => {
   const [messages, setMessages] = useState([]);
@@ -31,23 +32,21 @@ const Chat = ({db}) => {
   const navigation = useNavigation();
   const {name, color, userID} = route.params;
   let unsubMessages;
-  const connectionStatus = useNetInfo();
+  const {isConnected} = useNetInfo();
 
   useEffect(() => {
     // Check for a connection
-    if (connectionStatus.isConnected === false) {
+    if (isConnected === false) {
       Alert.alert('Connection Lost!');
       disableNetwork(db);
-    } else if (connectionStatus.isConnected === true) {
+    } else if (isConnected === true) {
       enableNetwork(db);
     }
 
     // Set the header to use name and color from previous screen, text is set to white to be visible no matter what background color is chosen
     navigation.setOptions({
       title: name,
-      headerStyle: {
-        backgroundColor: color,
-      },
+      headerStyle: {backgroundColor: color},
       headerTintColor: '#fff',
     });
 
@@ -82,7 +81,7 @@ const Chat = ({db}) => {
         unsubMessages();
       }
     };
-  }, [db, connectionStatus.isConnected, name, color, navigation]);
+  }, [db, isConnected, name, color, navigation]);
 
   // Async function that sets messages with cached value
   const loadCachedMessages = async () => {
@@ -104,6 +103,7 @@ const Chat = ({db}) => {
     addDoc(collection(db, 'messages'), newMessages[0]);
   };
 
+
   // Render the chat bubbles, the user's color is matched to the selected color
   const renderBubble = (props) => (
     <Bubble
@@ -119,7 +119,6 @@ const Chat = ({db}) => {
     />
   );
 
-
   // Disable the input toolbar if not connected
   const renderInputToolbar = (props) =>
     isConnected ? <InputToolbar {...props} /> : null;
@@ -131,14 +130,20 @@ const Chat = ({db}) => {
     />
   );
 
+  // renderCustomActions function is responsible for creating the circle button
+  const renderCustomActions = (props) => {
+    return <CustomActions {...props} />;
+  };
+
   return (
     <View style={styles.container}>
       <GiftedChat
-        messages={messages}
         renderBubble={renderBubble}
         renderInputToolbar={renderInputToolbar}
         renderSystemMessage={renderSystemMessage}
+        messages={messages}
         onSend={onSend}
+        renderActions={renderCustomActions}
         user={{_id: userID, username: name}}
       />
       {Platform.OS === 'android'
