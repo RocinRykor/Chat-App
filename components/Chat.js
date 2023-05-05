@@ -25,6 +25,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNetInfo} from '@react-native-community/netinfo';
 import CustomActions from './CustomActions';
+import MapView from 'react-native-maps';
 
 const Chat = ({db}) => {
   const [messages, setMessages] = useState([]);
@@ -65,7 +66,7 @@ const Chat = ({db}) => {
         const newMessages = documentsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-          createdAt: new Date(doc.data().createdAt.toMillis()),
+          createdAt: new Date(doc.data().createdAt.toMillis())
         }));
         cacheMessages(newMessages);
         setMessages(newMessages);
@@ -132,8 +133,29 @@ const Chat = ({db}) => {
 
   // renderCustomActions function is responsible for creating the circle button
   const renderCustomActions = (props) => {
-    return <CustomActions {...props} />;
+    return <CustomActions onSend={onSend} {...props} />;
   };
+
+    const renderCustomView = (props) => {
+    const { currentMessage} = props;
+    if (currentMessage.location) {
+      return (
+          <MapView
+            style={{width: 150,
+              height: 100,
+              borderRadius: 13,
+              margin: 3}}
+            region={{
+              latitude: currentMessage.location.latitude,
+              longitude: currentMessage.location.longitude,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+          />
+      );
+    }
+    return null;
+  }
 
   return (
     <View style={styles.container}>
@@ -144,6 +166,7 @@ const Chat = ({db}) => {
         messages={messages}
         onSend={onSend}
         renderActions={renderCustomActions}
+        renderCustomView={renderCustomView}
         user={{_id: userID, username: name}}
       />
       {Platform.OS === 'android'
