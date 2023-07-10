@@ -116,7 +116,7 @@ export default function Start({navigation}) {
 const styles = StyleSheet.create({
   title: {
     fontSize: 45,
-    fontWeight: 600,
+    fontWeight: 'bold',
     color: '#FFFFFF',
   },
 
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   text: {
     color: '#757083',
     fontSize: 16,
-    fontWeight: '300',
+    fontWeight: 'bold',
     textAlign: 'center',
   },
 
@@ -185,6 +185,6 @@ const styles = StyleSheet.create({
     padding: 10,
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
 });
