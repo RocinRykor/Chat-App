@@ -27,7 +27,7 @@ import {useNetInfo} from '@react-native-community/netinfo';
 import CustomActions from './CustomActions';
 import MapView from 'react-native-maps';
 
-const Chat = ({db}) => {
+const Chat = ({db, storage}) => {
   const [messages, setMessages] = useState([]);
   const route = useRoute();
   const navigation = useNavigation();
@@ -133,7 +133,7 @@ const Chat = ({db}) => {
 
   // renderCustomActions function is responsible for creating the circle button
   const renderCustomActions = (props) => {
-    return <CustomActions onSend={onSend} {...props} />;
+    return <CustomActions onSend={onSend} userID={userID} storage={storage} {...props} />;
   };
 
     const renderCustomView = (props) => {

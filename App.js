@@ -10,6 +10,7 @@ import React from 'react';
 // import firestore
 import {initializeApp} from 'firebase/app';
 import {getFirestore} from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Create the navigator
 const Stack = createNativeStackNavigator();
@@ -29,6 +30,7 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Cloud Firestore and get a reference to the service
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 const App = () => {
   return (
@@ -41,7 +43,7 @@ const App = () => {
           component={Start}
         />
         <Stack.Screen name="Chat">
-          {(props) => <Chat db={db} {...props} />}
+          {(props) => <Chat db={db} storage={storage} {...props} />}
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
